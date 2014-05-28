@@ -1,0 +1,22 @@
+{
+"manifest_version": 2,
+"name": "HungryNow",
+"description": "Find the right MTV cafe on go/hungry for you, based on your food preference.",
+"version": "0.1.2.4",
+"permissions": [
+	"https://sites.google.com/a/google.com/mv-cafes/",
+	"http://*.blogspot.com/"
+],
+"browser_action": {
+    "default_title": "Hungry Now",
+	"default_icon": "icon.png",
+	"default_popup": "popup.html"
+},
+"icons": {
+    "16": "icon.png"
+  },
+"background": {
+    "scripts": ["background.js"]
+  },
+ "content_security_policy": "script-src 'self' https://ajax.googleapis.com; object-src 'self'"
+}
