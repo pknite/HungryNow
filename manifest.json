@@ -2,7 +2,7 @@
 "manifest_version": 2,
 "name": "HungryNow",
 "description": "Find the right MTV cafe on go/hungry for you, based on your food preference.",
-"version": "0.1.2.4",
+"version": "0.1.2.7",
 "permissions": [
 	"https://sites.google.com/a/google.com/mv-cafes/",
 	"http://*.blogspot.com/"

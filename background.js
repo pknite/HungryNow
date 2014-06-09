@@ -31,24 +31,69 @@ $(function() {
 		cafeLinks = htmlDoc.getElementsByClassName("sites-navigation-link");
 	}
 
-	for (var i = 0; i < cafeLinks.length - 4; i++) {  //skip non-MTV cafes (last 4). different page format.
-		cafeList[i] = [];
-		var cafeUrl = cafeLinks[i].href;
-		cafeList[i].push(cafeLinks[i].text);
-		cafeList[i].push(cafeUrl);
+	var menuXHR = [];
+	var j = 0;
 
-		req.open('GET', cafeUrl, false);   
-		req.send(null);
+	console.log("Total links to process:" + (cafeLinks.length - 4));
 
-		if(req.status == 200) {
-			resp = req.responseText;
-			var menuItems = parseCafeMenuPage(resp);
+	for (var i = 0; i < cafeLinks.length - 4; i++) {  //skip non-MTV cafes (last 4). different content structure
+		(function(i) {
+			menuXHR[i] = new XMLHttpRequest();
+			var cafeUrl = cafeLinks[i].href;
+			menuXHR[i].open('GET', cafeUrl, true);
+			console.log("looped to: " + i);
 
-			cafeList[i].push(menuItems);
+			menuXHR[i].onload = function (e) {
+				console.log("loaded no. " + i + menuXHR[0]);
+				if (menuXHR[i].readyState === 4) {
+					console.log("ready no." + i);
+					if(menuXHR[i].status === 200) {
 
-		}
+						resp = menuXHR[i].responseText;
+						var menuItems = parseCafeMenuPage(resp);
+						cafeList[i] = [];
+						cafeList[i].push(cafeLinks[i].text);
+						cafeList[i].push(cafeUrl);
+
+						//menuXHR.open('GET', cafeUrl, false);
+						//console.log("sending request no." + i);
+
+						cafeList[i].push(menuItems);
+						//console.log("completed request no." + i);
+					};
+					//console.log("Pushed: no." + i);
+
+					//console.log("Total so far: " + j);
+					//when all pages are loaded (value of j matches length of array of pages - 1)
+					if (j == cafeLinks.length - 4 - 1) {
+							console.log("j=" + j + " | " + inputList);
+							for (var x=0; x < cafeLinks.length -4; x++) {
+								console.log("\n ******cafeList:" + x + " " + cafeList[x]);
+							}
+							scoreCafes(cafeList, inputList); // Score the cafes and dishes
+
+							sortCafes(cafeList); // Sort the cafes by their scores
+
+							var formattedOutput = createFormattedOutput(cafeList);
+
+							$('#output').html(formattedOutput);
+
+							var footerOutput = createFooterOutput(cafeList);
+							$('#footer').html(footerOutput);
+					}
+					else j++;
+				}
+				else (console.log("readystate = " + menuXHR[i].readyState + " | status = " + menuXHR[i].status));
+			};
+
+			menuXHR[i].onerror = function (e) {
+				console.error(menuXHR[i].statusText);
+			};
+
+			menuXHR[i].send();
+
+		})(i);
 	}
-
 
 	//pre-scoring sample data
 	//cafeList[0][0] : "BigTable";
@@ -56,20 +101,10 @@ $(function() {
 	//cafeList[0][2][0][0] : name of first dish
 	//cafeList[0][2][0][1] : ingredients of first dish
 
-	scoreCafes(cafeList, inputList);
 
 	//post-scoring sample data
 	//cafeList[0][2][0][2]) : Dish score
 	//cafeList[0][3]) : Cafe score
-
-	sortCafes(cafeList);
-
-	var formattedOutput = createFormattedOutput(cafeList);
-
-	$('#output').html(formattedOutput);
-
-	var footerOutput = createFooterOutput(cafeList);
-	$('#footer').html(footerOutput);
 
 });
 
@@ -98,7 +133,7 @@ function createFormattedOutput(cafeList){
 	var formattedOutput = "";
 
 	
-	for (var i=0; i<5; i++){ //show the top 3 cafes
+	for (var i=0; i<5; i++){ //show the top 5 cafes
 		formattedOutput += "<div>";
 		formattedOutput += "<h5>";
 		formattedOutput += "<a href='" + cafeList[i][1] + "' target='_blank'>" + cafeList[i][0] + "</a>";
@@ -195,6 +230,7 @@ return thisDishScore
 }
 
 function scoreDish(inputList, dishItem) {
+	console.log("dishItem: " + dishItem);
 	var dishName = dishItem[0].toLowerCase()
 	var checkedInputs = []
 	var thisDishScore = 0
@@ -220,13 +256,17 @@ function scoreDish(inputList, dishItem) {
 
 function scoreCafes(cafeList, inputList) {
 	for (var i = 0; i < cafeList.length; i++) { //loop through cafes
+		console.log("scoreCafes " + i + "||" + cafeList[i][0]);
 		thisCafeScore = 0;
 		for (var j = 0; j < cafeList[i][2].length; j++) { //loop through dishes for each cafe
+			console.log("scoreDish" + i + "||" + j + "||" + cafeList[i][2][j][0]);
 			thisCafeScore += scoreDish(inputList,cafeList[i][2][j]) //references a specific dish item (data structure of  ['dish name',['ingredient1','ingredient2']]
+			console.log("scoreDish - Done" + i + "||" + j);
 		}
 		//cafeList[i].push(thisCafeScore);
 		cafeList[i][3] = thisCafeScore;
 		//console.log(cafeList[i][0]+":"+thisCafeScore);
+		console.log("scoreCafes - Done " + i + "||" + cafeList[i][0]);
 	}
 }
 
