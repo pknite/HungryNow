@@ -209,6 +209,30 @@ function parseCafeMenuPage(resp){
 		return menuItems;
 }
 
+function wordMatch(inputA, inputB) { 
+//inputB represents the user's input. inputA is an ingredient or dish (in which we are looking for the input). 
+//so we want to make sure every element of inputB matches to something in inputA
+//this is a function to perform non-contiguous matching of multi-word strings. also removing plural 's' from the input for a fuzzier match
+	if (inputB.replace(/[^a-zA-Z]+/g,"").length <= 1) {return false}
+	if (inputA.indexOf(inputB) >= 0) { //if we have a starting match we can exit out with 'true'
+		return true;
+	} 
+	else if (inputB.charAt(inputB.length-1) === 's') {
+		var modB = inputB.slice(0,inputB.length-1);
+		if (inputA.indexOf(modB) >= 0) {
+			return true;
+		}
+	} else {
+		var splB = inputB.split(" ");
+		for (var i = 0; i < splB.length; i++) {
+			var match = true;
+			if (inputA.indexOf(splB[i]) === -1) {return false}
+		}
+		return true;
+	}
+	return false;
+}
+
 
 function scoreIngredients(inputList, ingredientString, checkedInputs, thisDishScore) {
 	//takes the dish score after checking the name of the dish itself, and checks the ingredients as well
@@ -217,7 +241,7 @@ function scoreIngredients(inputList, ingredientString, checkedInputs, thisDishSc
 	for (var i = 0; i < inputList.length; i++) { //loop through input items (likes/dislikes)
 		var inputDish = inputList[i][0]
 		var inputScore = inputList[i][1]
-		if (ingredientString.indexOf(inputDish) >= 0 && checkedInputs.indexOf(inputDish) === -1) {
+		if (wordMatch(ingredientString,inputDish) === true && checkedInputs.indexOf(inputDish) == -1) {
 			if (inputScore < 0) {
 				thisDishScore = inputScore
 				return thisDishScore //if we have a negative score, set score to the negative score and break (do not check ingredients)
@@ -237,7 +261,7 @@ function scoreDish(inputList, dishItem) {
 	for (var i  = 0; i < inputList.length; i++) {      //loop through input list for the dish names
 		var inputDish = inputList[i][0]
 		var inputScore = inputList[i][1]	
-		if (dishName.indexOf(inputDish) >= 0 && checkedInputs.indexOf(inputDish) === -1) { //we are checking if the name of that like is in the dish name
+		if (wordMatch(dishName,inputDish) === true && checkedInputs.indexOf(inputDish) === -1) { //we are checking if the name of that like is in the dish name
 			if (inputScore < 0) {
 				thisDishScore = inputScore
 				break
